@@ -1,8 +1,14 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:twitter_clone/core/core.dart';
+import 'package:twitter_clone/core/providers.dart';
 
+final AuthAPIProvider = Provider((ref) {
+  final account = ref.watch(appwriteAccountProvider);
+  return AuthAPI(account: account);
+});
 // when you want to signup or get user account you use -> Acoount it is ralated to creating and mnaaging data in the server side
 // when you want to get user data, you use Account from model, i.e model.User  i.e a model is returned, user related date
 

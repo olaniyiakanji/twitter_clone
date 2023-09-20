@@ -1,40 +1,107 @@
 import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart' as model;
+import 'package:appwrite/models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:twitter_clone/core/core.dart';
 import 'package:twitter_clone/core/providers.dart';
 
-final AuthAPIProvider = Provider((ref) {
+final authAPIProvider = Provider((ref) {
   final account = ref.watch(appwriteAccountProvider);
   return AuthAPI(account: account);
 });
-// when you want to signup or get user account you use -> Acoount it is ralated to creating and mnaaging data in the server side
-// when you want to get user data, you use Account from model, i.e model.User  i.e a model is returned, user related date
 
 abstract class IAuthAPI {
-  FutureEither<model.User> signUp({
+  FutureEither<User> signUp({
     required String email,
     required String password,
   });
+
+  FutureEither<Session> login({
+    required String email,
+    required String password,
+  });
+
+  Future<User?> currentUserAccount();
+
+  FutureEitherVoid logout();
 }
 
 class AuthAPI implements IAuthAPI {
   final Account _account;
+
   AuthAPI({required Account account}) : _account = account;
+
   @override
-  FutureEither<model.User> signUp(
-      {required String email, required String password}) async {
-    // TODO: implement signUp
+  Future<User?> currentUserAccount() async {
+    try {
+      return await _account.get();
+    } on AppwriteException {
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  FutureEither<User> signUp({
+    required String email,
+    required String password,
+  }) async {
     try {
       final account = await _account.create(
-          userId: 'unique()', email: email, password: password);
+        userId: ID.unique(),
+        email: email,
+        password: password,
+      );
       return right(account);
     } on AppwriteException catch (e, stackTrace) {
       return left(
-          Failure(e.message ?? 'some unexpected error occured', stackTrace));
+        Failure(e.message ?? 'Some unexpected error occurred', stackTrace),
+      );
     } catch (e, stackTrace) {
-      return left(Failure(e.toString(), stackTrace));
+      return left(
+        Failure(e.toString(), stackTrace),
+      );
+    }
+  }
+
+  @override
+  FutureEither<Session> login({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final session = await _account.createEmailSession(
+        email: email,
+        password: password,
+      );
+      return right(session);
+    } on AppwriteException catch (e, stackTrace) {
+      return left(
+        Failure(e.message ?? 'Some unexpected error occurred', stackTrace),
+      );
+    } catch (e, stackTrace) {
+      return left(
+        Failure(e.toString(), stackTrace),
+      );
+    }
+  }
+
+  @override
+  FutureEitherVoid logout() async {
+    try {
+      await _account.deleteSession(
+        sessionId: 'current',
+      );
+      return right(null);
+    } on AppwriteException catch (e, stackTrace) {
+      return left(
+        Failure(e.message ?? 'Some unexpected error occurred', stackTrace),
+      );
+    } catch (e, stackTrace) {
+      return left(
+        Failure(e.toString(), stackTrace),
+      );
     }
   }
 }

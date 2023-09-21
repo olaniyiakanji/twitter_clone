@@ -21,12 +21,8 @@ Source Code for Full Stack Twitter App - Works on Android & iOS!
 - Twitter Blue
 - Notifications tab (replied to you, followed you, like your pic, retweeted)
 
-## YouTube
-I have created a tutorial based on this, do check it out on my channel [Rivaan Ranawat](https://www.youtube.com/watch?v=XnxZLhtkFeg) 
-
-<p align="center">
-  <img width="600" src="https://github.com/RivaanRanawat/flutter_twitter_clone/blob/master/flutter%20twitter%20clone%20appwriite%20riverpod%20thumbnail.png" alt="Youtube Tutorial Image">
-</p>
+## project
+i followed a course on youtube and learnt a lot
 
 
 ## Installation
@@ -55,4 +51,7 @@ Then run the following commands to run your app:
 ## Feedback
 
 If you have any feedback, please reach out to me at namanrivaan@gmail.com
+
+## Acknowledgment
+i took insight and followed the course of rivan [Rivaan Ranawat](https://www.youtube.com/watch?v=XnxZLhtkFeg) 
 

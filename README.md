@@ -53,5 +53,5 @@ Then run the following commands to run your app:
 If you have any feedback, please reach out to me at namanrivaan@gmail.com
 
 ## Acknowledgment
-i took insight and followed the course of rivan [Rivaan Ranawat](https://www.youtube.com/watch?v=XnxZLhtkFeg) 
+Credits to [Rivaan Ranawat](https://www.youtube.com/watch?v=XnxZLhtkFeg) as I took guidance from his course
 

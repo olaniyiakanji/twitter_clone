@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "type": "command",
+            "name": "Start AVD",
+            "program": "/home/niyilola/Android/Sdk/emulator/emulator",
+            "args": [ "-avd", "Pixel_3a_API_33_x86_64"]
+        },
+        {
+            "type": "command",
+            "name": "Flutter Attach",
+            "program": "flutter",
+            "args": [ "attach", ]
+        },
+        
+        {
+            "type": "command",
+            "name": "Flutter on AVD",
+            "program": "flutter",
+            "args": [ "run", "lib/main.dart" ],
+        },
+    ]
+}

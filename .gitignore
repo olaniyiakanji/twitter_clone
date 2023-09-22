@@ -23,7 +23,7 @@ migrate_working_dir/
 
 # Flutter/Dart/Pub related
 **/doc/api/
-**/ios/Flutter/.last_build_id
+**/ios/Flutter/{Generated*,flutter*.sh}
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -31,6 +31,14 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+
+# Auto-generated files
+Generated*.{java,xconfig,h,m,swift}
+Flutter-Generated.xconfig
+**/Flutter/Generated*
+**/Flutter/Flutter-Generated*
+**/Runner/Generated*
+**/Generated*
 
 # Symbolication related
 app.*.symbols

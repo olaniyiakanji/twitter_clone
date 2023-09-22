@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:like_button/like_button.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'package:twitter_clone/common/common.dart';
 import 'package:twitter_clone/constants/assets_constants.dart';
 import 'package:twitter_clone/core/enums/tweet_type_enum.dart';
@@ -15,7 +16,6 @@ import 'package:twitter_clone/features/tweet/widgets/tweet_icon_button.dart';
 import 'package:twitter_clone/features/user_profile/view/user_profile_view.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
 import 'package:twitter_clone/theme/pallete.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 class TweetCard extends ConsumerWidget {
   final Tweet tweet;

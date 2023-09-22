@@ -10,34 +10,19 @@ import 'package:twitter_clone/features/auth/widgets/auth_field.dart';
 import 'package:twitter_clone/theme/pallete.dart';
 
 class LoginView extends ConsumerStatefulWidget {
+  const LoginView({super.key});
+  @override
+  ConsumerState<LoginView> createState() => _LoginViewState();
+
   static route() => MaterialPageRoute(
         builder: (context) => const LoginView(),
       );
-  const LoginView({super.key});
-
-  @override
-  ConsumerState<LoginView> createState() => _LoginViewState();
 }
 
 class _LoginViewState extends ConsumerState<LoginView> {
   final appbar = UIConstants.appBar();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    super.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-  }
-
-  void onLogin() {
-    ref.read(authControllerProvider.notifier).login(
-          email: emailController.text,
-          password: passwordController.text,
-          context: context,
-        );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,5 +87,20 @@ class _LoginViewState extends ConsumerState<LoginView> {
               ),
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+  }
+
+  void onLogin() {
+    ref.read(authControllerProvider.notifier).login(
+          email: emailController.text,
+          password: passwordController.text,
+          context: context,
+        );
   }
 }

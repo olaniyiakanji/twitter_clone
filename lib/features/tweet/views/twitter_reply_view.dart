@@ -7,17 +7,11 @@ import 'package:twitter_clone/features/tweet/widgets/tweet_card.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
 
 class TwitterReplyScreen extends ConsumerWidget {
-  static route(Tweet tweet) => MaterialPageRoute(
-        builder: (context) => TwitterReplyScreen(
-          tweet: tweet,
-        ),
-      );
   final Tweet tweet;
   const TwitterReplyScreen({
     super.key,
     required this.tweet,
   });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -120,4 +114,10 @@ class TwitterReplyScreen extends ConsumerWidget {
       ),
     );
   }
+
+  static route(Tweet tweet) => MaterialPageRoute(
+        builder: (context) => TwitterReplyScreen(
+          tweet: tweet,
+        ),
+      );
 }

@@ -7,28 +7,18 @@ import 'package:twitter_clone/features/tweet/views/create_tweet_view.dart';
 import 'package:twitter_clone/theme/pallete.dart';
 
 class HomeView extends StatefulWidget {
+  const HomeView({super.key});
+  @override
+  State<HomeView> createState() => _HomeViewState();
+
   static route() => MaterialPageRoute(
         builder: (context) => const HomeView(),
       );
-  const HomeView({super.key});
-
-  @override
-  State<HomeView> createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
   int _page = 0;
   final appBar = UIConstants.appBar();
-
-  void onPageChange(int index) {
-    setState(() {
-      _page = index;
-    });
-  }
-
-  onCreateTweet() {
-    Navigator.push(context, CreateTweetScreen.route());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,5 +67,15 @@ class _HomeViewState extends State<HomeView> {
         ],
       ),
     );
+  }
+
+  onCreateTweet() {
+    Navigator.push(context, CreateTweetScreen.route());
+  }
+
+  void onPageChange(int index) {
+    setState(() {
+      _page = index;
+    });
   }
 }

@@ -9,34 +9,19 @@ import 'package:twitter_clone/features/auth/widgets/auth_field.dart';
 import 'package:twitter_clone/theme/theme.dart';
 
 class SignUpView extends ConsumerStatefulWidget {
+  const SignUpView({super.key});
+  @override
+  ConsumerState<SignUpView> createState() => _SignUpViewState();
+
   static route() => MaterialPageRoute(
         builder: (context) => const SignUpView(),
       );
-  const SignUpView({super.key});
-
-  @override
-  ConsumerState<SignUpView> createState() => _SignUpViewState();
 }
 
 class _SignUpViewState extends ConsumerState<SignUpView> {
   final appbar = UIConstants.appBar();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
-  @override
-  void dispose() {
-    super.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-  }
-
-  void onSignUp() {
-    ref.read(authControllerProvider.notifier).signUp(
-          email: emailController.text,
-          password: passwordController.text,
-          context: context,
-        );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,5 +86,20 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
               ),
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+  }
+
+  void onSignUp() {
+    ref.read(authControllerProvider.notifier).signUp(
+          email: emailController.text,
+          password: passwordController.text,
+          context: context,
+        );
   }
 }

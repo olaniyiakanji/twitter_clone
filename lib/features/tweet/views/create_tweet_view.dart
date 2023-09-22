@@ -13,41 +13,19 @@ import 'package:twitter_clone/features/tweet/controller/tweet_controller.dart';
 import 'package:twitter_clone/theme/pallete.dart';
 
 class CreateTweetScreen extends ConsumerStatefulWidget {
-  static route() => MaterialPageRoute(
-        builder: (context) => const CreateTweetScreen(),
-      );
   const CreateTweetScreen({super.key});
-
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
       _CreateTweetScreenState();
+
+  static route() => MaterialPageRoute(
+        builder: (context) => const CreateTweetScreen(),
+      );
 }
 
 class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
   final tweetTextController = TextEditingController();
   List<File> images = [];
-
-  @override
-  void dispose() {
-    super.dispose();
-    tweetTextController.dispose();
-  }
-
-  void shareTweet() {
-    ref.read(tweetControllerProvider.notifier).shareTweet(
-          images: images,
-          text: tweetTextController.text,
-          context: context,
-          repliedTo: '',
-          repliedToUserId: '',
-        );
-    Navigator.pop(context);
-  }
-
-  void onPickImages() async {
-    images = await pickImages();
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,5 +144,27 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    tweetTextController.dispose();
+  }
+
+  void onPickImages() async {
+    images = await pickImages();
+    setState(() {});
+  }
+
+  void shareTweet() {
+    ref.read(tweetControllerProvider.notifier).shareTweet(
+          images: images,
+          text: tweetTextController.text,
+          context: context,
+          repliedTo: '',
+          repliedToUserId: '',
+        );
+    Navigator.pop(context);
   }
 }

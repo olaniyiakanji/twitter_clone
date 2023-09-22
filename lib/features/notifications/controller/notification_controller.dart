@@ -3,13 +3,6 @@ import 'package:twitter_clone/apis/notification_api.dart';
 import 'package:twitter_clone/core/enums/notification_type_enum.dart';
 import 'package:twitter_clone/models/notification_model.dart' as model;
 
-final notificationControllerProvider =
-    StateNotifierProvider<NotificationController, bool>((ref) {
-  return NotificationController(
-    notificationAPI: ref.watch(notificationAPIProvider),
-  );
-});
-
 final getLatestNotificationProvider = StreamProvider((ref) {
   final notificationAPI = ref.watch(notificationAPIProvider);
   return notificationAPI.getLatestNotification();
@@ -19,6 +12,13 @@ final getNotificationsProvider = FutureProvider.family((ref, String uid) async {
   final notificationController =
       ref.watch(notificationControllerProvider.notifier);
   return notificationController.getNotifications(uid);
+});
+
+final notificationControllerProvider =
+    StateNotifierProvider<NotificationController, bool>((ref) {
+  return NotificationController(
+    notificationAPI: ref.watch(notificationAPIProvider),
+  );
 });
 
 class NotificationController extends StateNotifier<bool> {

@@ -5,17 +5,11 @@ import 'package:twitter_clone/features/tweet/controller/tweet_controller.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_card.dart';
 
 class HashtagView extends ConsumerWidget {
-  static route(String hashtag) => MaterialPageRoute(
-        builder: (context) => HashtagView(
-          hashtag: hashtag,
-        ),
-      );
   final String hashtag;
   const HashtagView({
     super.key,
     required this.hashtag,
   });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -39,4 +33,10 @@ class HashtagView extends ConsumerWidget {
           ),
     );
   }
+
+  static route(String hashtag) => MaterialPageRoute(
+        builder: (context) => HashtagView(
+          hashtag: hashtag,
+        ),
+      );
 }

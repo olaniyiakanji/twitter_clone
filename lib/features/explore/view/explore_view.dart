@@ -18,12 +18,6 @@ class _ExploreViewState extends ConsumerState<ExploreView> {
   bool isShowUsers = false;
 
   @override
-  void dispose() {
-    super.dispose();
-    searchController.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final appBarTextFieldBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(50),
@@ -73,5 +67,11 @@ class _ExploreViewState extends ConsumerState<ExploreView> {
               )
           : const SizedBox(),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    searchController.dispose();
   }
 }

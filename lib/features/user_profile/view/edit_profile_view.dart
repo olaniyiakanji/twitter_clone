@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/common/loading_page.dart';
@@ -8,14 +9,14 @@ import 'package:twitter_clone/features/user_profile/controller/user_profile_cont
 import 'package:twitter_clone/theme/theme.dart';
 
 class EditProfileView extends ConsumerStatefulWidget {
-  static route() => MaterialPageRoute(
-        builder: (context) => const EditProfileView(),
-      );
   const EditProfileView({super.key});
-
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
       _EditProfileViewState();
+
+  static route() => MaterialPageRoute(
+        builder: (context) => const EditProfileView(),
+      );
 }
 
 class _EditProfileViewState extends ConsumerState<EditProfileView> {
@@ -23,42 +24,6 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   late TextEditingController bioController;
   File? bannerFile;
   File? profileFile;
-
-  @override
-  void initState() {
-    super.initState();
-    nameController = TextEditingController(
-      text: ref.read(currentUserDetailsProvider).value?.name ?? '',
-    );
-    bioController = TextEditingController(
-      text: ref.read(currentUserDetailsProvider).value?.bio ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    nameController.dispose();
-    bioController.dispose();
-  }
-
-  void selectBannerImage() async {
-    final banner = await pickImage();
-    if (banner != null) {
-      setState(() {
-        bannerFile = banner;
-      });
-    }
-  }
-
-  void selectProfileImage() async {
-    final profileImage = await pickImage();
-    if (profileImage != null) {
-      setState(() {
-        profileFile = profileImage;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,5 +123,41 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
               ],
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    nameController.dispose();
+    bioController.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(
+      text: ref.read(currentUserDetailsProvider).value?.name ?? '',
+    );
+    bioController = TextEditingController(
+      text: ref.read(currentUserDetailsProvider).value?.bio ?? '',
+    );
+  }
+
+  void selectBannerImage() async {
+    final banner = await pickImage();
+    if (banner != null) {
+      setState(() {
+        bannerFile = banner;
+      });
+    }
+  }
+
+  void selectProfileImage() async {
+    final profileImage = await pickImage();
+    if (profileImage != null) {
+      setState(() {
+        profileFile = profileImage;
+      });
+    }
   }
 }

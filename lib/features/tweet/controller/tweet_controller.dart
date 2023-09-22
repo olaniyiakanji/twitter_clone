@@ -13,31 +13,14 @@ import 'package:twitter_clone/features/notifications/controller/notification_con
 import 'package:twitter_clone/models/tweet_model.dart';
 import 'package:twitter_clone/models/user_model.dart';
 
-final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
-  (ref) {
-    return TweetController(
-      ref: ref,
-      tweetAPI: ref.watch(tweetAPIProvider),
-      storageAPI: ref.watch(storageAPIProvider),
-      notificationController:
-          ref.watch(notificationControllerProvider.notifier),
-    );
-  },
-);
-
-final getTweetsProvider = FutureProvider((ref) {
-  final tweetController = ref.watch(tweetControllerProvider.notifier);
-  return tweetController.getTweets();
+final getLatestTweetProvider = StreamProvider((ref) {
+  final tweetAPI = ref.watch(tweetAPIProvider);
+  return tweetAPI.getLatestTweet();
 });
 
 final getRepliesToTweetsProvider = FutureProvider.family((ref, Tweet tweet) {
   final tweetController = ref.watch(tweetControllerProvider.notifier);
   return tweetController.getRepliesToTweet(tweet);
-});
-
-final getLatestTweetProvider = StreamProvider((ref) {
-  final tweetAPI = ref.watch(tweetAPIProvider);
-  return tweetAPI.getLatestTweet();
 });
 
 final getTweetByIdProvider = FutureProvider.family((ref, String id) async {
@@ -49,6 +32,23 @@ final getTweetsByHashtagProvider = FutureProvider.family((ref, String hashtag) {
   final tweetController = ref.watch(tweetControllerProvider.notifier);
   return tweetController.getTweetsByHashtag(hashtag);
 });
+
+final getTweetsProvider = FutureProvider((ref) {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getTweets();
+});
+
+final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
+  (ref) {
+    return TweetController(
+      ref: ref,
+      tweetAPI: ref.watch(tweetAPIProvider),
+      storageAPI: ref.watch(storageAPIProvider),
+      notificationController:
+          ref.watch(notificationControllerProvider.notifier),
+    );
+  },
+);
 
 class TweetController extends StateNotifier<bool> {
   final TweetAPI _tweetAPI;
@@ -66,14 +66,24 @@ class TweetController extends StateNotifier<bool> {
         _notificationController = notificationController,
         super(false);
 
-  Future<List<Tweet>> getTweets() async {
-    final tweetList = await _tweetAPI.getTweets();
-    return tweetList.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  Future<List<Tweet>> getRepliesToTweet(Tweet tweet) async {
+    final documents = await _tweetAPI.getRepliesToTweet(tweet);
+    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
   }
 
   Future<Tweet> getTweetById(String id) async {
     final tweet = await _tweetAPI.getTweetById(id);
     return Tweet.fromMap(tweet.data);
+  }
+
+  Future<List<Tweet>> getTweets() async {
+    final tweetList = await _tweetAPI.getTweets();
+    return tweetList.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  }
+
+  Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
+    final documents = await _tweetAPI.getTweetsByHashtag(hashtag);
+    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
   }
 
   void likeTweet(Tweet tweet, UserModel user) async {
@@ -165,14 +175,26 @@ class TweetController extends StateNotifier<bool> {
     }
   }
 
-  Future<List<Tweet>> getRepliesToTweet(Tweet tweet) async {
-    final documents = await _tweetAPI.getRepliesToTweet(tweet);
-    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  List<String> _getHashtagsFromText(String text) {
+    List<String> hashtags = [];
+    List<String> wordsInSentence = text.split(' ');
+    for (String word in wordsInSentence) {
+      if (word.startsWith('#')) {
+        hashtags.add(word);
+      }
+    }
+    return hashtags;
   }
 
-  Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
-    final documents = await _tweetAPI.getTweetsByHashtag(hashtag);
-    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  String _getLinkFromText(String text) {
+    String link = '';
+    List<String> wordsInSentence = text.split(' ');
+    for (String word in wordsInSentence) {
+      if (word.startsWith('https://') || word.startsWith('www.')) {
+        link = word;
+      }
+    }
+    return link;
   }
 
   void _shareImageTweet({
@@ -254,27 +276,5 @@ class TweetController extends StateNotifier<bool> {
       }
     });
     state = false;
-  }
-
-  String _getLinkFromText(String text) {
-    String link = '';
-    List<String> wordsInSentence = text.split(' ');
-    for (String word in wordsInSentence) {
-      if (word.startsWith('https://') || word.startsWith('www.')) {
-        link = word;
-      }
-    }
-    return link;
-  }
-
-  List<String> _getHashtagsFromText(String text) {
-    List<String> hashtags = [];
-    List<String> wordsInSentence = text.split(' ');
-    for (String word in wordsInSentence) {
-      if (word.startsWith('#')) {
-        hashtags.add(word);
-      }
-    }
-    return hashtags;
   }
 }

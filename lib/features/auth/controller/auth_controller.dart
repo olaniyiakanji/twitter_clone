@@ -1,4 +1,4 @@
-import 'package:appwrite/models.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/apis/auth_api.dart';
@@ -9,16 +9,30 @@ import 'package:twitter_clone/features/auth/view/signup_view.dart';
 import 'package:twitter_clone/features/home/view/home_view.dart';
 import 'package:twitter_clone/models/user_model.dart';
 
-final authControllerProvider =
+final authControllerProvider = firebaseAuthControllerProvider;
+
+final appwriteAuthControllerProvider =
     StateNotifierProvider<AuthController, bool>((ref) {
   return AuthController(
-    authAPI: ref.watch(authAPIProvider),
-    userAPI: ref.watch(userAPIProvider),
+    authAPI: ref.watch(appwriteAuthAPIProvider),
+    userAPI: ref.watch(appwriteUserAPIProvider),
   );
 });
 
+final firebaseAuthControllerProvider =
+    StateNotifierProvider<AuthController, bool>((ref) {
+  return AuthController(
+      authAPI: ref.watch(firebaseAuthAPIProvider),
+      userAPI: ref.watch(firebaseUserAPIProvider));
+});
+
+final currentUserAccountProvider = FutureProvider((ref) {
+  final authController = ref.watch(authControllerProvider.notifier);
+  return authController.currentUser;
+});
+
 final currentUserDetailsProvider = FutureProvider((ref) {
-  final currentUserId = ref.watch(currentUserAccountProvider).value!.$id;
+  final currentUserId = ref.watch(currentUserAccountProvider).value!.uid;
   final userDetails = ref.watch(userDetailsProvider(currentUserId));
   return userDetails.value;
 });
@@ -28,23 +42,55 @@ final userDetailsProvider = FutureProvider.family((ref, String uid) {
   return authController.getUserData(uid);
 });
 
-final currentUserAccountProvider = FutureProvider((ref) {
-  final authController = ref.watch(authControllerProvider.notifier);
-  return authController.currentUser();
-});
-
 class AuthController extends StateNotifier<bool> {
-  final AuthAPI _authAPI;
-  final UserAPI _userAPI;
+  final FirebaseAuthAPI _authAPI;
+  final FirebaseUserAPI _userAPI;
   AuthController({
     required AuthAPI authAPI,
     required UserAPI userAPI,
-  })  : _authAPI = authAPI,
-        _userAPI = userAPI,
+  })  : _authAPI = authAPI as FirebaseAuthAPI,
+        _userAPI = userAPI as FirebaseUserAPI,
         super(false);
   // state = isLoading
 
-  Future<User?> currentUser() => _authAPI.currentUserAccount();
+  // need to change the 'User?' when it's switched
+  firebase.User? get currentUser => _authAPI.currentUserAccount;
+
+  Future<UserModel> getUserData(String uid) async {
+    final document = (await _userAPI.getUserData(uid))?.data();
+    final user = UserModel.fromMap(document! as Map<String, dynamic>);
+    return user;
+  }
+
+  void login({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = true;
+    final res = await _authAPI.login(
+      email: email,
+      password: password,
+    );
+    state = false;
+    res.fold(
+      (l) => showSnackBar(context, l.message),
+      (r) {
+        Navigator.push(context, HomeView.route());
+      },
+    );
+  }
+
+  void logout(BuildContext context) async {
+    final res = await _authAPI.logout();
+    res.fold((l) => null, (r) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        SignUpView.route(),
+        (route) => false,
+      );
+    });
+  }
 
   void signUp({
     required String email,
@@ -67,7 +113,7 @@ class AuthController extends StateNotifier<bool> {
           following: const [],
           profilePic: '',
           bannerPic: '',
-          uid: r.$id,
+          uid: r.user!.uid,
           bio: '',
           isTwitterBlue: false,
         );
@@ -78,41 +124,5 @@ class AuthController extends StateNotifier<bool> {
         });
       },
     );
-  }
-
-  void login({
-    required String email,
-    required String password,
-    required BuildContext context,
-  }) async {
-    state = true;
-    final res = await _authAPI.login(
-      email: email,
-      password: password,
-    );
-    state = false;
-    res.fold(
-      (l) => showSnackBar(context, l.message),
-      (r) {
-        Navigator.push(context, HomeView.route());
-      },
-    );
-  }
-
-  Future<UserModel> getUserData(String uid) async {
-    final document = await _userAPI.getUserData(uid);
-    final updatedUser = UserModel.fromMap(document.data);
-    return updatedUser;
-  }
-
-  void logout(BuildContext context) async {
-    final res = await _authAPI.logout();
-    res.fold((l) => null, (r) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        SignUpView.route(),
-        (route) => false,
-      );
-    });
   }
 }

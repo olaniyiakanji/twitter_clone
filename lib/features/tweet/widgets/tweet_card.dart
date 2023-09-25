@@ -15,6 +15,7 @@ import 'package:twitter_clone/features/tweet/widgets/hashtag_text.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_icon_button.dart';
 import 'package:twitter_clone/features/user_profile/view/user_profile_view.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
+import 'package:twitter_clone/models/user_model.dart';
 import 'package:twitter_clone/theme/pallete.dart';
 
 class TweetCard extends ConsumerWidget {
@@ -31,7 +32,7 @@ class TweetCard extends ConsumerWidget {
     return currentUser == null
         ? const SizedBox()
         : ref.watch(userDetailsProvider(tweet.uid)).when(
-              data: (user) {
+              data: (UserModel user) {
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(

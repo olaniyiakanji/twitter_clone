@@ -21,7 +21,9 @@ class ExploreController extends StateNotifier<bool> {
         super(false);
 
   Future<List<UserModel>> searchUser(String name) async {
-    final users = await _userAPI.searchUserByName(name);
-    return users.map((e) => UserModel.fromMap(e.data)).toList();
+    final users = await (_userAPI as FirebaseUserAPI).searchUserByName(name);
+    return users
+        .map((e) => UserModel.fromMap(e.data() as Map<String, dynamic>))
+        .toList();
   }
 }

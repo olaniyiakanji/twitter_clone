@@ -51,8 +51,13 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(userDetailsProvider("6514b3cbdda0590c122d")).value!; // meant to get userDetails with that id
+    // that user exists in the database, did you see when I copied it?
+    // So yes it exists...
+    // If this above fails to get the user then there is a problem with the system
     final currentUser = ref.watch(currentUserDetailsProvider).value;
     final isLoading = ref.watch(tweetControllerProvider);
+
 
     return Scaffold(
       appBar: AppBar(

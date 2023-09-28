@@ -6,6 +6,10 @@ import 'package:twitter_clone/features/user_profile/controller/user_profile_cont
 import 'package:twitter_clone/features/user_profile/widget/user_profile.dart';
 import 'package:twitter_clone/models/user_model.dart';
 
+void updateUser(UserModel user, List<UserModel> userList) {
+  var match = userList.where((u) => u.uid == user.uid).first;
+  userList.indexOf()
+
 class UserProfileView extends ConsumerWidget {
   final UserModel userModel;
   const UserProfileView({
@@ -16,9 +20,20 @@ class UserProfileView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     UserModel copyOfUser = userModel;
 
+    // new abstraction added:
+    final List<UserModel> _data = [];
+
+    // process new changes
+    void processChanges(List<UserModel> newData) {
+      for (UserModel user in newData) {
+        Iterable s = _data.where((u) => u.uid == user.uid);
+      }
+    }
+
     return Scaffold(
       body: ref.watch(getLatestUserProfileDataProvider).when(
             data: (data) {
+              final d = data as Map<String, dynamic>;
               if (data.events.contains(
                 'databases.*.collections.${AppwriteConstants.usersCollection}.documents.${copyOfUser.uid}.update',
               )) {

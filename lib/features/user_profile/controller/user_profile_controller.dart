@@ -33,14 +33,18 @@ final userProfileControllerProvider =
 });
 
 class UserProfileController extends StateNotifier<bool> {
-  final TweetAPI _tweetAPI;
+  // NOTE: for adjustion to another tweet API,
+  // you can just change the type to *TweetAPI,
+  // at the time of this writing, it was FirebaseTweetAPI.
+  // And that applies to the rest: {*StorageAPI,*UserAPI,}
+  final FirebaseTweetAPI _tweetAPI;
   final StorageAPI _storageAPI;
-  final UserAPI _userAPI;
+  final FirebaseUserAPI _userAPI;
   final NotificationController _notificationController;
   UserProfileController({
-    required TweetAPI tweetAPI,
+    required FirebaseTweetAPI tweetAPI,
     required StorageAPI storageAPI,
-    required UserAPI userAPI,
+    required FirebaseUserAPI userAPI,
     required NotificationController notificationController,
   })  : _tweetAPI = tweetAPI,
         _storageAPI = storageAPI,

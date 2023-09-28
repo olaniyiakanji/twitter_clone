@@ -51,13 +51,15 @@ final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
 );
 
 class TweetController extends StateNotifier<bool> {
-  final TweetAPI _tweetAPI;
+  // simply change the *TweetAPI to TweetAPI if you intend to
+  // use a default one already
+  final FirebaseTweetAPI _tweetAPI;
   final StorageAPI _storageAPI;
   final NotificationController _notificationController;
   final Ref _ref;
   TweetController({
     required Ref ref,
-    required TweetAPI tweetAPI,
+    required FirebaseTweetAPI tweetAPI,
     required StorageAPI storageAPI,
     required NotificationController notificationController,
   })  : _ref = ref,
@@ -68,22 +70,27 @@ class TweetController extends StateNotifier<bool> {
 
   Future<List<Tweet>> getRepliesToTweet(Tweet tweet) async {
     final documents = await _tweetAPI.getRepliesToTweet(tweet);
-    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+    return List<Tweet>.from(documents.map(
+        (tweetRef) => Tweet.fromMap(tweetRef.data() as Map<String, dynamic>)));
   }
 
   Future<Tweet> getTweetById(String id) async {
     final tweet = await _tweetAPI.getTweetById(id);
-    return Tweet.fromMap(tweet.data);
+    return Tweet.fromMap(tweet.data() as Map<String, dynamic>);
   }
 
   Future<List<Tweet>> getTweets() async {
     final tweetList = await _tweetAPI.getTweets();
-    return tweetList.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+    return tweetList
+        .map((tweet) => Tweet.fromMap(tweet.data() as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
     final documents = await _tweetAPI.getTweetsByHashtag(hashtag);
-    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+    return documents
+        .map((tweet) => Tweet.fromMap(tweet.data() as Map<String, dynamic>))
+        .toList();
   }
 
   void likeTweet(Tweet tweet, UserModel user) async {
@@ -124,7 +131,6 @@ class TweetController extends StateNotifier<bool> {
       (l) => showSnackBar(context, l.message),
       (r) async {
         tweet = tweet.copyWith(
-          id: ID.unique(),
           reshareCount: 0,
           tweetedAt: DateTime.now(),
         );
@@ -230,7 +236,7 @@ class TweetController extends StateNotifier<bool> {
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(
           text: '${user.name} replied to your tweet!',
-          postId: r.$id,
+          postId: r.id,
           notificationType: NotificationType.reply,
           uid: repliedToUserId,
         );
@@ -269,12 +275,14 @@ class TweetController extends StateNotifier<bool> {
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(
           text: '${user.name} replied to your tweet!',
-          postId: r.$id,
+          postId: r.id,
           notificationType: NotificationType.reply,
           uid: repliedToUserId,
         );
       }
     });
+
+    res.fold((l) => showSnackBar(context, l.message), (r) {});
     state = false;
   }
 }

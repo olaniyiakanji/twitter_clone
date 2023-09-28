@@ -9,6 +9,8 @@ import 'package:twitter_clone/core/core.dart';
 import 'package:twitter_clone/core/providers.dart';
 import 'package:twitter_clone/models/user_model.dart';
 
+final userAPIProvider = firebaseUserAPIProvider;
+
 final appwriteUserAPIProvider = Provider((ref) {
   return AppwriteUserAPI(
     db: ref.watch(appwriteDatabaseProvider),
@@ -17,10 +19,9 @@ final appwriteUserAPIProvider = Provider((ref) {
 });
 
 final firebaseUserAPIProvider = Provider((ref) {
-  return AppwriteUserAPI(
-    db: ref.watch(appwriteDatabaseProvider),
-    realtime: ref.watch(appwriteRealtimeProvider),
-  );
+  return FirebaseUserAPI(
+      db: ref.watch(firebaseFirestoreProvider),
+      instance: ref.watch(firebaseAuthProvider));
 });
 
 abstract class IAppwriteUserAPI {
@@ -38,7 +39,7 @@ abstract class IFirebaseUserAPI {
   Future<DocumentSnapshot?> getUserData(String uid);
   Future<List<DocumentSnapshot>> searchUserByName(String name);
   FutureEitherVoid updateUserData(UserModel userModel);
-  Future<Stream> getLatestUserProfileData();
+  Stream<List<UserModel>> getLatestUserProfileData();
   FutureEitherVoid followUser(UserModel user);
   FutureEitherVoid addToFollowing(UserModel user);
 }
@@ -234,14 +235,15 @@ class FirebaseUserAPI extends UserAPI implements IFirebaseUserAPI {
   }
 
   @override
-  Future<Stream<List<UserModel>>> getLatestUserProfileData() async {
+  Stream<List<UserModel>> getLatestUserProfileData() {
     final query = FirebaseFirestore.instance.collection('users_collection');
 
     // Listen for changes to the collection and return a stream of snapshots.
     return query.snapshots().map((snapshot) {
       // Convert the snapshot to a list of UserModel objects.
-      final users = snapshot.docs.map((document) {
-        return UserModel.fromMap(document.data());
+      // NOTE and TODO: here,... the `.docChanges` here is dangerous and untested
+      final users = snapshot.docChanges.map((document) {
+        return UserModel.fromMap(document.doc.data() as Map<String, dynamic>);
       }).toList();
 
       // Return the list of UserModel objects.
@@ -264,8 +266,7 @@ class FirebaseUserAPI extends UserAPI implements IFirebaseUserAPI {
   @override
   FutureEitherVoid saveUserData(UserModel userModel) async {
     try {
-      final documentReference =
-          FirebaseFirestore.instance.collection('users').doc(userModel.uid);
+      final documentReference = _db.collection('users').doc(userModel.uid);
       await documentReference.set(userModel.toMap());
       return right(null);
     } catch (e, st) {

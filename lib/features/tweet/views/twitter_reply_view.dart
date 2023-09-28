@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/common/common.dart';
-import 'package:twitter_clone/constants/appwrite_constants.dart';
 import 'package:twitter_clone/features/tweet/controller/tweet_controller.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_card.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
@@ -25,7 +24,8 @@ class TwitterReplyScreen extends ConsumerWidget {
                 data: (tweets) {
                   return ref.watch(getLatestTweetProvider).when(
                         data: (data) {
-                          final latestTweet = Tweet.fromMap(data.payload);
+                          final latestTweet = Tweet.fromMap(
+                              data.data() as Map<String, dynamic>);
 
                           bool isTweetAlreadyPresent = false;
                           for (final tweetModel in tweets) {
@@ -35,45 +35,32 @@ class TwitterReplyScreen extends ConsumerWidget {
                             }
                           }
 
-                          if (!isTweetAlreadyPresent &&
-                              latestTweet.repliedTo == tweet.id) {
-                            if (data.events.contains(
-                              'databases.*.collections.${AppwriteConstants.tweetsCollection}.documents.*.create',
-                            )) {
-                              tweets.insert(0, Tweet.fromMap(data.payload));
-                            } else if (data.events.contains(
-                              'databases.*.collections.${AppwriteConstants.tweetsCollection}.documents.*.update',
-                            )) {
-                              // get id of original tweet
-                              final startingPoint =
-                                  data.events[0].lastIndexOf('documents.');
-                              final endPoint =
-                                  data.events[0].lastIndexOf('.update');
-                              final tweetId = data.events[0]
-                                  .substring(startingPoint + 10, endPoint);
+                          Widget view = buildExpanded(tweets);
 
-                              var tweet = tweets
-                                  .where((element) => element.id == tweetId)
-                                  .first;
-
-                              final tweetIndex = tweets.indexOf(tweet);
-                              tweets.removeWhere(
-                                  (element) => element.id == tweetId);
-
-                              tweet = Tweet.fromMap(data.payload);
-                              tweets.insert(tweetIndex, tweet);
-                            }
+                          if (latestTweet.repliedTo != tweet.id) {
+                            return view;
                           }
 
-                          return Expanded(
-                            child: ListView.builder(
-                              itemCount: tweets.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final tweet = tweets[index];
-                                return TweetCard(tweet: tweet);
-                              },
-                            ),
-                          );
+                          if (isTweetAlreadyPresent) {
+                            // get id of original tweet
+                            final tweetId = data.id;
+                            var tweet = tweets
+                                .where((element) => element.id == tweetId)
+                                .first;
+                            final tweetIndex = tweets.indexOf(tweet);
+                            tweets.removeWhere(
+                                (element) => element.id == tweetId);
+
+                            tweet = Tweet.fromMap(
+                                data.data() as Map<String, dynamic>);
+                            tweets.insert(tweetIndex, tweet);
+                          } else {
+                            // if tweet has just been created
+                            tweets.insert(0, latestTweet);
+                          }
+                          view = buildExpanded(tweets);
+
+                          return view;
                         },
                         error: (error, stackTrace) => ErrorText(
                           error: error.toString(),
@@ -111,6 +98,18 @@ class TwitterReplyScreen extends ConsumerWidget {
         decoration: const InputDecoration(
           hintText: 'Tweet your reply',
         ),
+      ),
+    );
+  }
+
+  Expanded buildExpanded(List<Tweet> tweets) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: tweets.length,
+        itemBuilder: (BuildContext context, int index) {
+          final tweet = tweets[index];
+          return TweetCard(tweet: tweet);
+        },
       ),
     );
   }

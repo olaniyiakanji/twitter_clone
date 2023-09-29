@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/apis/storage_api.dart';
@@ -12,6 +11,31 @@ import 'package:twitter_clone/features/auth/controller/auth_controller.dart';
 import 'package:twitter_clone/features/notifications/controller/notification_controller.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
 import 'package:twitter_clone/models/user_model.dart';
+
+final getLatestTweetProvider = StreamProvider((ref) {
+  final tweetAPI = ref.watch(tweetAPIProvider);
+  return tweetAPI.getLatestTweet();
+});
+
+final getRepliesToTweetsProvider = FutureProvider.family((ref, Tweet tweet) {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getRepliesToTweet(tweet);
+});
+
+final getTweetByIdProvider = FutureProvider.family((ref, String id) async {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getTweetById(id);
+});
+
+final getTweetsByHashtagProvider = FutureProvider.family((ref, String hashtag) {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getTweetsByHashtag(hashtag);
+});
+
+final getTweetsProvider = FutureProvider((ref) {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getTweets();
+});
 
 final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
   (ref) {
@@ -25,39 +49,16 @@ final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
   },
 );
 
-final getTweetsProvider = FutureProvider((ref) {
-  final tweetController = ref.watch(tweetControllerProvider.notifier);
-  return tweetController.getTweets();
-});
-
-final getRepliesToTweetsProvider = FutureProvider.family((ref, Tweet tweet) {
-  final tweetController = ref.watch(tweetControllerProvider.notifier);
-  return tweetController.getRepliesToTweet(tweet);
-});
-
-final getLatestTweetProvider = StreamProvider((ref) {
-  final tweetAPI = ref.watch(tweetAPIProvider);
-  return tweetAPI.getLatestTweet();
-});
-
-final getTweetByIdProvider = FutureProvider.family((ref, String id) async {
-  final tweetController = ref.watch(tweetControllerProvider.notifier);
-  return tweetController.getTweetById(id);
-});
-
-final getTweetsByHashtagProvider = FutureProvider.family((ref, String hashtag) {
-  final tweetController = ref.watch(tweetControllerProvider.notifier);
-  return tweetController.getTweetsByHashtag(hashtag);
-});
-
 class TweetController extends StateNotifier<bool> {
-  final TweetAPI _tweetAPI;
+  // simply change the *TweetAPI to TweetAPI if you intend to
+  // use a default one already
+  final FirebaseTweetAPI _tweetAPI;
   final StorageAPI _storageAPI;
   final NotificationController _notificationController;
   final Ref _ref;
   TweetController({
     required Ref ref,
-    required TweetAPI tweetAPI,
+    required FirebaseTweetAPI tweetAPI,
     required StorageAPI storageAPI,
     required NotificationController notificationController,
   })  : _ref = ref,
@@ -66,14 +67,29 @@ class TweetController extends StateNotifier<bool> {
         _notificationController = notificationController,
         super(false);
 
-  Future<List<Tweet>> getTweets() async {
-    final tweetList = await _tweetAPI.getTweets();
-    return tweetList.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  Future<List<Tweet>> getRepliesToTweet(Tweet tweet) async {
+    final documents = await _tweetAPI.getRepliesToTweet(tweet);
+    return List<Tweet>.from(documents.map(
+        (tweetRef) => Tweet.fromMap(tweetRef.data() as Map<String, dynamic>)));
   }
 
   Future<Tweet> getTweetById(String id) async {
     final tweet = await _tweetAPI.getTweetById(id);
-    return Tweet.fromMap(tweet.data);
+    return Tweet.fromMap(tweet.data() as Map<String, dynamic>);
+  }
+
+  Future<List<Tweet>> getTweets() async {
+    final tweetList = await _tweetAPI.getTweets();
+    return tweetList
+        .map((tweet) => Tweet.fromMap(tweet.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
+    final documents = await _tweetAPI.getTweetsByHashtag(hashtag);
+    return documents
+        .map((tweet) => Tweet.fromMap(tweet.data() as Map<String, dynamic>))
+        .toList();
   }
 
   void likeTweet(Tweet tweet, UserModel user) async {
@@ -114,7 +130,6 @@ class TweetController extends StateNotifier<bool> {
       (l) => showSnackBar(context, l.message),
       (r) async {
         tweet = tweet.copyWith(
-          id: ID.unique(),
           reshareCount: 0,
           tweetedAt: DateTime.now(),
         );
@@ -165,14 +180,26 @@ class TweetController extends StateNotifier<bool> {
     }
   }
 
-  Future<List<Tweet>> getRepliesToTweet(Tweet tweet) async {
-    final documents = await _tweetAPI.getRepliesToTweet(tweet);
-    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  List<String> _getHashtagsFromText(String text) {
+    List<String> hashtags = [];
+    List<String> wordsInSentence = text.split(' ');
+    for (String word in wordsInSentence) {
+      if (word.startsWith('#')) {
+        hashtags.add(word);
+      }
+    }
+    return hashtags;
   }
 
-  Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
-    final documents = await _tweetAPI.getTweetsByHashtag(hashtag);
-    return documents.map((tweet) => Tweet.fromMap(tweet.data)).toList();
+  String _getLinkFromText(String text) {
+    String link = '';
+    List<String> wordsInSentence = text.split(' ');
+    for (String word in wordsInSentence) {
+      if (word.startsWith('https://') || word.startsWith('www.')) {
+        link = word;
+      }
+    }
+    return link;
   }
 
   void _shareImageTweet({
@@ -208,7 +235,7 @@ class TweetController extends StateNotifier<bool> {
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(
           text: '${user.name} replied to your tweet!',
-          postId: r.$id,
+          postId: r.id,
           notificationType: NotificationType.reply,
           uid: repliedToUserId,
         );
@@ -247,34 +274,14 @@ class TweetController extends StateNotifier<bool> {
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(
           text: '${user.name} replied to your tweet!',
-          postId: r.$id,
+          postId: r.id,
           notificationType: NotificationType.reply,
           uid: repliedToUserId,
         );
       }
     });
+
+    res.fold((l) => showSnackBar(context, l.message), (r) {});
     state = false;
-  }
-
-  String _getLinkFromText(String text) {
-    String link = '';
-    List<String> wordsInSentence = text.split(' ');
-    for (String word in wordsInSentence) {
-      if (word.startsWith('https://') || word.startsWith('www.')) {
-        link = word;
-      }
-    }
-    return link;
-  }
-
-  List<String> _getHashtagsFromText(String text) {
-    List<String> hashtags = [];
-    List<String> wordsInSentence = text.split(' ');
-    for (String word in wordsInSentence) {
-      if (word.startsWith('#')) {
-        hashtags.add(word);
-      }
-    }
-    return hashtags;
   }
 }

@@ -39,7 +39,7 @@ abstract class IFirebaseUserAPI {
   Future<DocumentSnapshot?> getUserData(String uid);
   Future<List<DocumentSnapshot>> searchUserByName(String name);
   FutureEitherVoid updateUserData(UserModel userModel);
-  Stream<List<UserModel>> getLatestUserProfileData();
+  Stream<UserModel> getLatestUserProfileData();
   FutureEitherVoid followUser(UserModel user);
   FutureEitherVoid addToFollowing(UserModel user);
 }
@@ -235,19 +235,19 @@ class FirebaseUserAPI extends UserAPI implements IFirebaseUserAPI {
   }
 
   @override
-  Stream<List<UserModel>> getLatestUserProfileData() {
-    final query = FirebaseFirestore.instance.collection('users_collection');
+  Stream<UserModel> getLatestUserProfileData() {
+    final query = _db.collection('users');
 
     // Listen for changes to the collection and return a stream of snapshots.
-    return query.snapshots().map((snapshot) {
+    return query.snapshots(includeMetadataChanges: true).map((snapshot) {
       // Convert the snapshot to a list of UserModel objects.
       // NOTE and TODO: here,... the `.docChanges` here is dangerous and untested
-      final users = snapshot.docChanges.map((document) {
-        return UserModel.fromMap(document.doc.data() as Map<String, dynamic>);
-      }).toList();
+      final user = snapshot.docs.map((document) {
+        return UserModel.fromMap(document.data());
+      }).;
 
       // Return the list of UserModel objects.
-      return users;
+      return user;
     });
   }
 

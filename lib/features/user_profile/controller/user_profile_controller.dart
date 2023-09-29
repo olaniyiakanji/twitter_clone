@@ -87,7 +87,9 @@ class UserProfileController extends StateNotifier<bool> {
 
   Future<List<Tweet>> getUserTweets(String uid) async {
     final tweets = await _tweetAPI.getUserTweets(uid);
-    return tweets.map((e) => Tweet.fromMap(e.data)).toList();
+    return tweets
+        .map((d) => Tweet.fromMap(d.data() as Map<String, dynamic>))
+        .toList();
   }
 
   void updateUserProfile({

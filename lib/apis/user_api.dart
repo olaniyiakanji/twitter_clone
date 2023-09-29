@@ -244,7 +244,7 @@ class FirebaseUserAPI extends UserAPI implements IFirebaseUserAPI {
       // NOTE and TODO: here,... the `.docChanges` here is dangerous and untested
       final user = snapshot.docs.map((document) {
         return UserModel.fromMap(document.data());
-      }).;
+      }).first;
 
       // Return the list of UserModel objects.
       return user;
